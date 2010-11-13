@@ -1,0 +1,57 @@
+
+This is a simple user-level networking environment which uses
+the VFIO driver to map various network devices directly into 
+the user address space.
+
+*Nothing about the code should be considered anything but prototype and/or
+demonstration quality.*
+
+Each mapped device or virtual device has its own MAC address, and should
+be assigned its own IP address using the ULD_IP environment variable.
+
+The udpecho program can generate or respond to UDP echo datagrams on port 7.
+
+The uldcap programs can capture packets ala tcpdump and can pipe directly
+to tcpdump for decoding:
+	./uldcap | tcpdump -r -
+
+The threcho programs exercises the multi-threading support in the code by
+having any number of simultaneous threads sending udp echo messages.
+
+The uldmap program just attempts to map for DMA a buffer to verify that
+the VFIO driver is working.
+
+Common environment variables for all programs:
+
+ULD_PCI=xx:xx.x
+	The PCI device address of the device to be used. Must be previously
+	bound to the VFIO driver.
+
+ULD_IP=a.b.c.d
+	The IPv4 address to use. Not needed for uldcap.
+
+ULD_GW=e.f.g.h
+	The IPv4 gateway address for non-local traffic.
+	Defaults to host 1 on the subnet.
+
+ULD_NETMASK=m.m.m.m
+	The IPv4 net mask. Defaults to 255.255.255.0
+
+If attempting to run these programs as non-root, you'll need to make sure
+that /dev/uiommu and /dev/vfio* are accessible, and you'll need to crank up
+the lockable page limit (ulimit -l) to whatever the underlying device
+driver needs
+
+The most accessible hardware to try this out on is the Intel 82576 PCIe card,
+part number E1G42ET.  Beware - not all 82576 chips support SR-IOV, which is what
+this driver depends on.
+
+For those blessed with 10 Gigabit Ethernet, the Intel 82599 works (not 82598), also
+in SR-IOV mode.
+
+SR-IOV can be a pain to get working - many BIOSes don't do the right thing. And for
+the Intel drivers, the corresponding physical driver/link must be brought "UP"
+before the VF drivers will work.
+
+Lastly, the code works with the Cisco "Palo" adapters - only available in Cisco
+servers.
