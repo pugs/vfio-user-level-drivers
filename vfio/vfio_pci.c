@@ -16,6 +16,9 @@
  * SOFTWARE.
  *
  */
+
+#define _LARGEFILE64_SOURCE
+
 #include <stdio.h>
 #include <dirent.h>
 #include <stdlib.h>
@@ -96,57 +99,57 @@ int vfio_open(char **namep)
 
 u8 pci_read_config_byte(int pci_fd, u16 off)
 {
-	off_t cfg_off = VFIO_PCI_CONFIG_OFF + off;
+	off64_t cfg_off = VFIO_PCI_CONFIG_OFF + off;
 	u8 wd = 0;
 
-	if (pread(pci_fd, &wd, 1, cfg_off) != 1)
+	if (pread64(pci_fd, &wd, 1, cfg_off) != 1)
 		perror("pread config_byte");
 	return wd;
 }
 
 u16 pci_read_config_word(int pci_fd, u16 off)
 {
-	off_t cfg_off = VFIO_PCI_CONFIG_OFF + off;
+	off64_t cfg_off = VFIO_PCI_CONFIG_OFF + off;
 	u16 wd = 0;
 
-	if (pread(pci_fd, &wd, 2, cfg_off) != 2)
+	if (pread64(pci_fd, &wd, 2, cfg_off) != 2)
 		perror("pread config_word");
 	return le16toh(wd);
 }
 
 u32 pci_read_config_dword(int pci_fd, u16 off)
 {
-	off_t cfg_off = VFIO_PCI_CONFIG_OFF + off;
+	off64_t cfg_off = VFIO_PCI_CONFIG_OFF + off;
 	u32 wd = 0;
 
-	if (pread(pci_fd, &wd, 4, cfg_off) != 4)
+	if (pread64(pci_fd, &wd, 4, cfg_off) != 4)
 		perror("pread config_dword");
 	return le32toh(wd);
 }
 
 void pci_write_config_byte(int pci_fd, u16 off, u8 wd)
 {
-	off_t cfg_off = VFIO_PCI_CONFIG_OFF + off;
+	off64_t cfg_off = VFIO_PCI_CONFIG_OFF + off;
 
-	if (pwrite(pci_fd, &wd, 1, cfg_off) != 1)
+	if (pwrite64(pci_fd, &wd, 1, cfg_off) != 1)
 		perror("pwrite config_dword");
 }
 
 void pci_write_config_word(int pci_fd, u16 off, u16 wd)
 {
-	off_t cfg_off = VFIO_PCI_CONFIG_OFF + off;
+	off64_t cfg_off = VFIO_PCI_CONFIG_OFF + off;
 
 	wd = htole16(wd);
-	if (pwrite(pci_fd, &wd, 2, cfg_off) != 2)
+	if (pwrite64(pci_fd, &wd, 2, cfg_off) != 2)
 		perror("pwrite config_dword");
 }
 
 void pci_write_config_dword(int pci_fd, u16 off, u32 wd)
 {
-	off_t cfg_off = VFIO_PCI_CONFIG_OFF + off;
+	off64_t cfg_off = VFIO_PCI_CONFIG_OFF + off;
 
 	wd = htole32(wd);
-	if (pwrite(pci_fd, &wd, 4, cfg_off) != 4)
+	if (pwrite64(pci_fd, &wd, 4, cfg_off) != 4)
 		perror("pwrite config_dword");
 }
 
@@ -163,12 +166,12 @@ void *pci_mmap_bar(int pci_fd, int bar, int rw)
 	u32 barlen;
 
 	barlen = pci_resource_len(pci_fd, bar);
-	foo = mmap(NULL,
+	foo = mmap64(NULL,
 			barlen,
 			rw ? PROT_READ+PROT_WRITE : PROT_READ,
 			MAP_SHARED,
 			pci_fd,
-			(off_t)vfio_pci_space_to_offset(bar));
+			vfio_pci_space_to_offset(bar));
 	if (foo == (void *)-1) {
 		perror("pci_mmap_bar");
 		return NULL;
